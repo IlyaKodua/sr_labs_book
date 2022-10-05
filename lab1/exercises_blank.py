@@ -184,7 +184,7 @@ def mvn_floating(features, LC, RC, unbiased=False):
          ) / (n - 1 if unbiased else n) - f ** 2 * (n / (n - 1) if unbiased else 1)
     
 
-    normalised_features = (features -f)/s
+    normalised_features = (features -f)/np.sqrt(s)
 
     normalised_features[s == 0] = 0
 
