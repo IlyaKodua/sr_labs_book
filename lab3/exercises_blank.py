@@ -5,7 +5,7 @@
 import os
 import random
 
-import numpy
+import numpy as np
 
 import torch
 import torchaudio
@@ -55,9 +55,12 @@ class train_dataset_loader(Dataset):
         if self.augment:
             ###########################################################
             # Here is your code
-
-            pass
-            
+            if random.random() < 0.2:  # Augment with 0.2 probability.
+                if random.random() < 0.25:  # Reverberate with 0.25 probability.
+                    audio = self.augment_wav.reverberate(audio)
+                else:  # Add noise with 0.75 probability.
+                    noisecat = random.choice(self.augment_wav.noisetypes)
+                    audio = self.augment_wav.additive_noise(noisecat, audio)
             ###########################################################
             
         return torch.FloatTensor(audio), self.data_label[index]
@@ -208,7 +211,20 @@ class ResNet(nn.Module):
                 x = self.instancenorm(x).unsqueeze(1)
 
         ###########################################################
-        # Here is your code
+        x = self.relu(self.bn1(self.conv1(x)))
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        mean_x = torch.mean(x, dim=3)
+        std_x = torch.std(x, dim=3)
+        x = torch.cat((mean_x, std_x), dim=2)
+        x = torch.flatten(x, 1)
+
+        x = self.fc(x)
+
+        # Уровень выходного слоя
 
         ###########################################################
 
@@ -238,7 +254,7 @@ class MainModel(nn.Module):
 
             return nloss, prec1
         
-def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, verbose=False):
+def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, verbose=False, device_id=0):
     # Function to train model
 
     assert scheduler[1] in ['epoch', 'iteration']
@@ -259,10 +275,29 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         ###########################################################
         # Here is your code
 
+        index += 1
+        counter += 1
+
+        data = data.cuda(device_id)
+        data_label = data_label.cuda(device_id)
+        optimizer.zero_grad()
+        nloss, prec1 = main_model.forward(data, label=data_label)
+        nloss.backward()
+        optimizer.step()
+
+        loss += nloss.item()
+        top1 += prec1.item()
+
+        nloss.detach().cpu()
+        data.detach().cpu()
+        data_label.detach().cpu()
         ###########################################################
-        
-        if verbose:
-            print("Epoch {:1.0f}, Batch {:1.0f}, LR {:f} Loss {:f}, Accuracy {:2.3f}%".format(num_epoch, counter, optimizer.param_groups[0]['lr'], loss/counter, top1/counter))
+
+        if verbose and index % 100 == 0:
+            print("Epoch {:1.0f}, Batch {:1.0f}, LR {:f} Loss {:f}, Accuracy {:2.3f}%".format(num_epoch, counter,
+                                                                                              optimizer.param_groups[0][
+                                                                                                  'lr'], loss / counter,
+                                                                                              top1 / counter))
 
         if scheduler[1] == 'iteration': scheduler[0].step()
 
@@ -270,7 +305,7 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
 
     return (loss/counter, top1/counter)
 
-def test_network(test_loader, main_model):
+def test_network(test_loader, main_model, device_id=0):
     # Function to test model
     
     main_model.eval()
@@ -285,7 +320,16 @@ def test_network(test_loader, main_model):
         
         ###########################################################
         # Here is your code
-        
+        data = data.cuda(device_id)
+        data_label = data_label.cuda(device_id)
+        nloss, prec1 = main_model.forward(data, label=data_label)
+        loss += nloss.item()
+        top1 += prec1.item()
+        counter += 1
+
+        nloss.detach().cpu()
+        data.detach().cpu()
+        data_label.detach().cpu()
         ###########################################################
 
     return (loss/counter, top1/counter)
