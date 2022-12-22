@@ -18,6 +18,20 @@ from common import loadWAV, AugmentWAV
 from ResNetBlocks import *
 from preproc import PreEmphasis
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def disable_bn(model):
+  for module in model.modules():
+    if isinstance(module, nn.BatchNorm1d):
+      module.eval()
+    if isinstance(module, nn.BatchNorm2d):
+      module.eval()
+
+def enable_bn(model):
+  model.train()
+
+
 
 class train_dataset_loader(Dataset):
     # Train dataset loader
@@ -240,7 +254,7 @@ class MainModel(nn.Module):
 
     def forward(self, data, label=None):
 
-        data = data.reshape(-1, data.size()[-1]).cuda() 
+        data = data.reshape(-1, data.size()[-1]).to(device) 
         outp = self.__S__.forward(data)
 
         if label == None:
@@ -278,15 +292,24 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         index += 1
         counter += 1
 
-        data = data.cuda(device_id)
-        data_label = data_label.cuda(device_id)
+        data = data.to(device) 
+        data_label = data_label.to(device) 
         optimizer.zero_grad()
+        enable_bn(main_model)
         nloss, prec1 = main_model.forward(data, label=data_label)
-        nloss.backward()
-        optimizer.step()
+        with main_model.no_sync():  
+            nloss.backward()
+        optimizer.first_step(zero_grad=True)
+
+        disable_bn(main_model)
+
 
         loss += nloss.item()
         top1 += prec1.item()
+
+        nloss, prec1 = main_model.forward(data, label=data_label)
+        nloss.backward()
+        optimizer.second_step(zero_grad=True)
 
         nloss.detach().cpu()
         data.detach().cpu()
@@ -320,8 +343,8 @@ def test_network(test_loader, main_model, device_id=0):
         
         ###########################################################
         # Here is your code
-        data = data.cuda(device_id)
-        data_label = data_label.cuda(device_id)
+        data = data.to(device) 
+        data_label = data_label.to(device) 
         nloss, prec1 = main_model.forward(data, label=data_label)
         loss += nloss.item()
         top1 += prec1.item()
