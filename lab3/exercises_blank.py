@@ -179,6 +179,7 @@ class ResNet(nn.Module):
         else:
             raise ValueError('Undefined encoder')
 
+        out_dim = 1280
         self.fc = nn.Sequential(MaxoutLinear(out_dim, nOut), nn.InstanceNorm1d(nOut, affine=False))
 
         for m in self.modules():
@@ -285,7 +286,7 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
     for data, data_label in train_loader:
 
         data = data.transpose(1, 0)
-        
+    
         ###########################################################
         # Here is your code
         # print(data[0][0:10])
@@ -298,19 +299,9 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         # enable_bn(main_model)
         nloss, prec1 = main_model.forward(data, label=data_label) 
         nloss.backward()
-        optimizer.first_step(zero_grad=True)
-
-        # disable_bn(main_model)
+        optimizer.step()
 
 
-        loss += nloss.item()
-        top1 += prec1.item()
-
-        nloss, prec1 = main_model.forward(data, label=data_label)
-        nloss.backward()
-        optimizer.second_step(zero_grad=True)
-
-        # enable_bn(main_model)
         nloss.detach().cpu()
         data.detach().cpu()
         data_label.detach().cpu()
