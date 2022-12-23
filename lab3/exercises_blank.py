@@ -270,7 +270,7 @@ class MainModel(nn.Module):
         
 def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, verbose=False, device_id=0):
     # Function to train model
-
+    print(device)
     assert scheduler[1] in ['epoch', 'iteration']
     
     main_model.train()
@@ -316,7 +316,7 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         data_label.detach().cpu()
         ###########################################################
 
-        if verbose and index % 100 == 0:
+        if verbose and index % 10 == 0:
             print("Epoch {:1.0f}, Batch {:1.0f}, LR {:f} Loss {:f}, Accuracy {:2.3f}%".format(num_epoch, counter,
                                                                                               optimizer.param_groups[0][
                                                                                                   'lr'], loss / counter,
