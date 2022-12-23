@@ -154,7 +154,7 @@ class ResNet(nn.Module):
         self.instancenorm   = nn.InstanceNorm1d(n_mels)
 
         self.conv1  = nn.Conv2d(1, num_filters[0], kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn1    = nn.BatchNorm2d(num_filters[0])
+        self.bn1    = nn.InstanceNorm2d(num_filters[0])
         self.relu   = activation(inplace=True)
         
         self.layer1 = self._make_layer(block, num_filters[0], layers[0], stride=1, activation=activation)
@@ -179,7 +179,7 @@ class ResNet(nn.Module):
         else:
             raise ValueError('Undefined encoder')
 
-        self.fc = nn.Sequential(MaxoutLinear(out_dim, nOut), nn.BatchNorm1d(nOut, affine=False))
+        self.fc = nn.Sequential(MaxoutLinear(out_dim, nOut), nn.InstanceNorm1d(nOut, affine=False))
 
         for m in self.modules():
 
@@ -295,12 +295,12 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         data = data.to(device) 
         data_label = data_label.to(device) 
         optimizer.zero_grad()
-        enable_bn(main_model)
+        # enable_bn(main_model)
         nloss, prec1 = main_model.forward(data, label=data_label) 
         nloss.backward()
         optimizer.first_step(zero_grad=True)
 
-        disable_bn(main_model)
+        # disable_bn(main_model)
 
 
         loss += nloss.item()
@@ -310,13 +310,13 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         nloss.backward()
         optimizer.second_step(zero_grad=True)
 
-        enable_bn(main_model)
+        # enable_bn(main_model)
         nloss.detach().cpu()
         data.detach().cpu()
         data_label.detach().cpu()
         ###########################################################
 
-        if verbose and index % 10 == 0:
+        if verbose and index % 3 == 0:
             print("Epoch {:1.0f}, Batch {:1.0f}, LR {:f} Loss {:f}, Accuracy {:2.3f}%".format(num_epoch, counter,
                                                                                               optimizer.param_groups[0][
                                                                                                   'lr'], loss / counter,

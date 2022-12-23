@@ -27,7 +27,7 @@ class BasicBlock(nn.Module):
         super(BasicBlock, self).__init__()
 
         if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
+            norm_layer = nn.InstanceNorm2d
 
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
         self.conv1      = conv3x3(inplanes, planes, stride)
