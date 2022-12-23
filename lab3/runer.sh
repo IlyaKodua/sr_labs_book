@@ -1,3 +1,6 @@
+sudo mount -t nfs -o rw,async,noatime,nodiratime,vers=3,wsize=1048576,rsize=1048576,noacl,nocto,timeo=600 nfs.coldstore:/speechpro/nid/workdata/ITMO_voice_recognition /mnt/storage
+
+
 jupyter nbconvert lab3_blank.ipynb --to script
 ipython lab3_blank.py 
 
