@@ -160,6 +160,7 @@ class Angleproto(nn.Module):
 
     def forward(self, x, label=None):
 
+        print(x.shape)
         assert x.size()[1] >= 2
 
         out_anchor      = torch.mean(x[:,1],1)
