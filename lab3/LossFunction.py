@@ -162,8 +162,8 @@ class Angleproto(nn.Module):
 
         assert x.size()[1] >= 2
 
-        out_anchor      = torch.mean(x[:,1:,:],1)
-        out_positive    = x[:,0,:]
+        out_anchor      = torch.mean(x[:,1],1)
+        out_positive    = x[:,0]
         stepsize        = out_anchor.size()[0]
 
         cos_sim_matrix  = F.cosine_similarity(out_positive.unsqueeze(-1),out_anchor.unsqueeze(-1).transpose(0,2))
