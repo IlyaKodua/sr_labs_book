@@ -296,9 +296,8 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         data_label = data_label.to(device) 
         optimizer.zero_grad()
         enable_bn(main_model)
-        nloss, prec1 = main_model.forward(data, label=data_label)
-        with main_model.no_sync():  
-            nloss.backward()
+        nloss, prec1 = main_model.forward(data, label=data_label) 
+        nloss.backward()
         optimizer.first_step(zero_grad=True)
 
         disable_bn(main_model)
@@ -311,6 +310,7 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         nloss.backward()
         optimizer.second_step(zero_grad=True)
 
+        enable_bn(main_model)
         nloss.detach().cpu()
         data.detach().cpu()
         data_label.detach().cpu()

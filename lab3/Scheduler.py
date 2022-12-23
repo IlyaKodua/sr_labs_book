@@ -9,7 +9,7 @@ import torch
 def StepLRScheduler(optimizer, test_interval, lr_decay, **kwargs):
     # Function to create scheduler
     
-    sche_fn = torch.optim.lr_scheduler.StepLR(optimizer, step_size=test_interval, gamma=lr_decay)
+    sche_fn = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
     lr_step = 'epoch'
 
@@ -20,13 +20,7 @@ def StepLRScheduler(optimizer, test_interval, lr_decay, **kwargs):
 def OneCycleLRScheduler(optimizer, pct_start, cycle_momentum, max_lr, div_factor, final_div_factor, total_steps, **kwargs):
     # Function to create scheduler
     
-    sche_fn = torch.optim.lr_scheduler.OneCycleLR(optimizer, 
-                                                  pct_start=pct_start, 
-                                                  cycle_momentum=cycle_momentum, 
-                                                  max_lr=max_lr, 
-                                                  div_factor=div_factor, 
-                                                  final_div_factor=final_div_factor, 
-                                                  total_steps=total_steps)
+    sche_fn = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     
     lr_step = 'iteration'
 
