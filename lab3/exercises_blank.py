@@ -179,7 +179,6 @@ class ResNet(nn.Module):
         else:
             raise ValueError('Undefined encoder')
 
-        out_dim = 1280
         self.fc = nn.Sequential(MaxoutLinear(out_dim, nOut), nn.InstanceNorm1d(nOut, affine=False))
 
         for m in self.modules():
