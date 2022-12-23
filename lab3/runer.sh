@@ -2,6 +2,6 @@ sudo mount -t nfs -o rw,async,noatime,nodiratime,vers=3,wsize=1048576,rsize=1048
 
 
 jupyter nbconvert lab3_blank.ipynb --to script
-ipython lab3_blank.py 
+ipython3 lab3_blank.py 
 
 
