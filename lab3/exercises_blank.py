@@ -288,7 +288,7 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         
         ###########################################################
         # Here is your code
-        print(data[0][0:10])
+        # print(data[0][0:10])
         index += 1
         counter += 1
 
