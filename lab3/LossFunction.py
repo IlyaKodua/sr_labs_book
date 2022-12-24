@@ -169,7 +169,7 @@ class AnglProto(nn.Module):
         torch.clamp(self.w, 1e-6)
         cos_sim_matrix = cos_sim_matrix * self.w + self.b
         
-        label   = torch.from_numpy(numpy.asarray(range(0,stepsize))).cpu()
+        label   = torch.from_numpy(numpy.asarray(range(0,stepsize))).cuda()
         nloss   = self.criterion(cos_sim_matrix, label)
         prec1   = accuracy(cos_sim_matrix.detach(), label.detach(), topk=(1,))[0]
 
