@@ -262,7 +262,7 @@ class MainModel(nn.Module):
             return outp
 
         else:
-            outp = outp.reshape(2, -1, outp.size()[-1]).transpose(1, 0).squeeze(1)
+            outp = outp.reshape(1, -1, outp.size()[-1]).transpose(1, 0).squeeze(1)
 
             nloss, prec1 = self.__L__.forward(outp, label)
 
