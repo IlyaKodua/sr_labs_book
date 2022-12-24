@@ -293,7 +293,7 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         data_label.detach().cpu()
         ###########################################################
 
-        if verbose and index % 100 == 0:
+        if verbose and index % 3 == 0:
             print("Epoch {:1.0f}, Batch {:1.0f}, LR {:f} Loss {:f}, Accuracy {:2.3f}%".format(num_epoch, counter,
                                                                                               optimizer.param_groups[0][
                                                                                                   'lr'], loss / counter,
