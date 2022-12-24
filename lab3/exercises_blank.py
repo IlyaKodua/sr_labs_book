@@ -18,20 +18,6 @@ from common import loadWAV, AugmentWAV
 from ResNetBlocks import *
 from preproc import PreEmphasis
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-def disable_bn(model):
-  for module in model.modules():
-    if isinstance(module, nn.BatchNorm1d):
-      module.eval()
-    if isinstance(module, nn.BatchNorm2d):
-      module.eval()
-
-def enable_bn(model):
-  model.train()
-
-
 
 class train_dataset_loader(Dataset):
     # Train dataset loader
@@ -154,7 +140,7 @@ class ResNet(nn.Module):
         self.instancenorm   = nn.InstanceNorm1d(n_mels)
 
         self.conv1  = nn.Conv2d(1, num_filters[0], kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn1    = nn.InstanceNorm2d(num_filters[0])
+        self.bn1    = nn.BatchNorm2d(num_filters[0])
         self.relu   = activation(inplace=True)
         
         self.layer1 = self._make_layer(block, num_filters[0], layers[0], stride=1, activation=activation)
@@ -179,7 +165,7 @@ class ResNet(nn.Module):
         else:
             raise ValueError('Undefined encoder')
 
-        self.fc = nn.Sequential(MaxoutLinear(out_dim, nOut), nn.InstanceNorm1d(nOut, affine=False))
+        self.fc = nn.Sequential(MaxoutLinear(out_dim, nOut), nn.BatchNorm1d(nOut, affine=False))
 
         for m in self.modules():
 
@@ -254,7 +240,7 @@ class MainModel(nn.Module):
 
     def forward(self, data, label=None):
 
-        data = data.reshape(-1, data.size()[-1]).to(device) 
+        data = data.reshape(-1, data.size()[-1]).cuda() 
         outp = self.__S__.forward(data)
 
         if label == None:
@@ -266,12 +252,11 @@ class MainModel(nn.Module):
 
             nloss, prec1 = self.__L__.forward(outp, label)
 
-
             return nloss, prec1
         
 def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, verbose=False, device_id=0):
     # Function to train model
-    print(device)
+
     assert scheduler[1] in ['epoch', 'iteration']
     
     main_model.train()
@@ -286,28 +271,29 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
     for data, data_label in train_loader:
 
         data = data.transpose(1, 0)
-    
+        
         ###########################################################
         # Here is your code
-        # print(data[0][0:10])
+
         index += 1
         counter += 1
 
-        data = data.to(device) 
-        data_label = data_label.to(device) 
+        data = data.cuda(device_id)
+        data_label = data_label.cuda(device_id)
         optimizer.zero_grad()
-        # enable_bn(main_model)
-        nloss, prec1 = main_model.forward(data, label=data_label) 
+        nloss, prec1 = main_model.forward(data, label=data_label)
         nloss.backward()
         optimizer.step()
 
+        loss += nloss.item()
+        top1 += prec1.item()
 
         nloss.detach().cpu()
         data.detach().cpu()
         data_label.detach().cpu()
         ###########################################################
 
-        if verbose and index % 3 == 0:
+        if verbose and index % 100 == 0:
             print("Epoch {:1.0f}, Batch {:1.0f}, LR {:f} Loss {:f}, Accuracy {:2.3f}%".format(num_epoch, counter,
                                                                                               optimizer.param_groups[0][
                                                                                                   'lr'], loss / counter,
@@ -334,8 +320,8 @@ def test_network(test_loader, main_model, device_id=0):
         
         ###########################################################
         # Here is your code
-        data = data.to(device) 
-        data_label = data_label.to(device) 
+        data = data.cuda(device_id)
+        data_label = data_label.cuda(device_id)
         nloss, prec1 = main_model.forward(data, label=data_label)
         loss += nloss.item()
         top1 += prec1.item()
