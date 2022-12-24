@@ -278,7 +278,10 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
 
         index += 1
         counter += 1
-        print(data_label)
+        cnt = 0
+        for i in range(len(data_label)):
+            cnt += torch.sum(data_label == data_label[i]) - 1
+        print(cnt)
         data = data.cuda(device_id)
         data_label = data_label.cuda(device_id)
         optimizer.zero_grad()
