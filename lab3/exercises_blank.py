@@ -278,7 +278,7 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
 
         index += 1
         counter += 1
-
+        print(data_label)
         data = data.cuda(device_id)
         data_label = data_label.cuda(device_id)
         optimizer.zero_grad()
