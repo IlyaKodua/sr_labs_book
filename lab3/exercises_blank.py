@@ -18,6 +18,8 @@ from common import loadWAV, AugmentWAV
 from ResNetBlocks import *
 from preproc import PreEmphasis
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 class train_dataset_loader(Dataset):
     # Train dataset loader
@@ -49,21 +51,33 @@ class train_dataset_loader(Dataset):
             self.data_list.append(filename)
 
     def __getitem__(self, index):
-        
-        audio = loadWAV(self.data_list[index], self.max_frames, evalmode=False)
-
-        if self.augment:
-            ###########################################################
-            # Here is your code
-            if random.random() < 0.2:  # Augment with 0.2 probability.
-                if random.random() < 0.25:  # Reverberate with 0.25 probability.
-                    audio = self.augment_wav.reverberate(audio)
-                else:  # Add noise with 0.75 probability.
-                    noisecat = random.choice(self.augment_wav.noisetypes)
-                    audio = self.augment_wav.additive_noise(noisecat, audio)
-            ###########################################################
+        audios = 0
+        labels = []
+        cnt = 0
+        for idx in index:
             
-        return torch.FloatTensor(audio), self.data_label[index]
+            audio = loadWAV(self.data_list[idx], self.max_frames, evalmode=False)
+
+            if self.augment:
+                ###########################################################
+                # Here is your code
+                if random.random() < 0.2:  # Augment with 0.2 probability.
+                    if random.random() < 0.25:  # Reverberate with 0.25 probability.
+                        audio = self.augment_wav.reverberate(audio)
+                    else:  # Add noise with 0.75 probability.
+                        noisecat = random.choice(self.augment_wav.noisetypes)
+                        audio = self.augment_wav.additive_noise(noisecat, audio)
+            if cnt ==0:
+                audios = torch.FloatTensor(audio)
+                
+                
+            else:
+                audios = torch.cat((audios, torch.FloatTensor(audio)), dim=0)
+
+            labels.append(self.data_label[idx])
+            cnt+= 1
+        
+        return audios, np.array(labels)
 
     def __len__(self):
         
@@ -240,7 +254,7 @@ class MainModel(nn.Module):
 
     def forward(self, data, label=None):
 
-        data = data.reshape(-1, data.size()[-1]).cuda() 
+        data = data.reshape(-1, data.size()[-1]).to(device)
         outp = self.__S__.forward(data)
 
         if label == None:
@@ -248,9 +262,11 @@ class MainModel(nn.Module):
             return outp
 
         else:
-            # outp = outp.reshape(1, -1, outp.size()[-1]).transpose(1, 0).squeeze(1)
-            outp = outp.reshape(1, -1, outp.size()[-1]).transpose(1, 0).squeeze(1)
-
+            
+            outp = outp.reshape(2, -1, outp.size()[-1]).transpose(1, 0).squeeze(1)
+            print(data.shape)
+            print(label.shape)
+            print(outp.shape)
             nloss, prec1 = self.__L__.forward(outp, label)
 
             return nloss, prec1
@@ -278,12 +294,9 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
 
         index += 1
         counter += 1
-        cnt = 0
-        for i in range(len(data_label)):
-            cnt += torch.sum(data_label == data_label[i]) - 1
-        print(cnt)
-        data = data.cuda(device_id)
-        data_label = data_label.cuda(device_id)
+
+        data = data.to(device)
+        data_label = data_label.to(device)
         optimizer.zero_grad()
         nloss, prec1 = main_model.forward(data, label=data_label)
         nloss.backward()
@@ -297,7 +310,7 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         data_label.detach().cpu()
         ###########################################################
 
-        if verbose and index % 3 == 0:
+        if verbose and index % 100 == 0:
             print("Epoch {:1.0f}, Batch {:1.0f}, LR {:f} Loss {:f}, Accuracy {:2.3f}%".format(num_epoch, counter,
                                                                                               optimizer.param_groups[0][
                                                                                                   'lr'], loss / counter,
@@ -324,8 +337,8 @@ def test_network(test_loader, main_model, device_id=0):
         
         ###########################################################
         # Here is your code
-        data = data.cuda(device_id)
-        data_label = data_label.cuda(device_id)
+        data = data.to(device)
+        data_label = data_label.to(device)
         nloss, prec1 = main_model.forward(data, label=data_label)
         loss += nloss.item()
         top1 += prec1.item()
