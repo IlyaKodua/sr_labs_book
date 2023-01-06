@@ -18,7 +18,6 @@ from common import loadWAV, AugmentWAV
 from ResNetBlocks import *
 from preproc import PreEmphasis
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class train_dataset_loader(Dataset):
@@ -254,7 +253,7 @@ class MainModel(nn.Module):
 
     def forward(self, data, label=None):
 
-        data = data.reshape(-1, data.size()[-1]).to(device)
+        data = data.reshape(-1, data.size()[-1]).cuda()
         outp = self.__S__.forward(data)
 
         if label == None:
@@ -292,8 +291,8 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         index += 1
         counter += 1
 
-        data = data.to(device)
-        data_label = data_label.to(device)
+        data = data.cuda()
+        data_label = data_label.cuda()
         optimizer.zero_grad()
         nloss, prec1 = main_model.forward(data, label=data_label)
         nloss.backward()
@@ -334,8 +333,8 @@ def test_network(test_loader, main_model, device_id=0):
         
         ###########################################################
         # Here is your code
-        data = data.to(device)
-        data_label = data_label.to(device)
+        data = data.cuda()
+        data_label = data_label.cuda()
         nloss, prec1 = main_model.forward(data, label=data_label)
         loss += nloss.item()
         top1 += prec1.item()
