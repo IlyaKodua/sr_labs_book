@@ -1,4 +1,5 @@
 # Exercises in order to perform laboratory work
+import time
 
 
 # Import of modules
@@ -294,6 +295,7 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         data = data.cuda()
         data_label = data_label.cuda()
         optimizer.zero_grad()
+        
         nloss, prec1 = main_model.forward(data, label=data_label)
         nloss.backward()
         optimizer.step()
@@ -305,7 +307,7 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         data.detach().cpu()
         data_label.detach().cpu()
         ###########################################################
-
+    
         if verbose and index % 3 == 0:
             print("Epoch {:1.0f}, Batch {:1.0f}, LR {:f} Loss {:f}, Accuracy {:2.3f}%".format(num_epoch, counter,
                                                                                               optimizer.param_groups[0][
