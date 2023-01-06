@@ -303,9 +303,6 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         loss += nloss.item()
         top1 += prec1.item()
 
-        nloss.detach().cpu()
-        data.detach().cpu()
-        data_label.detach().cpu()
         ###########################################################
     
         if verbose and index % 3 == 0:
@@ -341,10 +338,6 @@ def test_network(test_loader, main_model, device_id=0):
         loss += nloss.item()
         top1 += prec1.item()
         counter += 1
-
-        nloss.detach().cpu()
-        data.detach().cpu()
-        data_label.detach().cpu()
         ###########################################################
 
     return (loss/counter, top1/counter)
