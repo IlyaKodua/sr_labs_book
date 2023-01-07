@@ -213,7 +213,7 @@ class ResNet(nn.Module):
         
         return out
 
-    @torch.jit.script
+
     def forward(self, x):
 
         with torch.no_grad():
@@ -253,7 +253,7 @@ class MainModel(nn.Module):
         self.__S__ = model
         self.__L__ = trainfunc
 
-    @torch.jit.script
+
     def forward(self, data, label=None):
 
         data = data.reshape(-1, data.size()[-1]).cuda()
