@@ -196,10 +196,14 @@ class train_dataset_sampler(torch.utils.data.Sampler):
         
     def __iter__(self):
 
-        g = torch.Generator()
-        g.manual_seed(self.seed + self.epoch)
-        indices = torch.randperm(len(self.data_label), generator=g).tolist()
+        # g = torch.Generator()
+        # g.manual_seed(self.seed + self.epoch)
+        # indices = torch.randperm(len(self.data_label), generator=g).tolist()
 
+
+        # g = torch.Generator()
+        # g.manual_seed(self.seed + self.epoch)
+        indices = torch.randperm(len(self.data_label)).tolist()
         data_dict = {}
 
         # Sort into dictionary of file indices for each ID
@@ -229,7 +233,8 @@ class train_dataset_sampler(torch.utils.data.Sampler):
                 flattened_list.append([data[i] for i in indices])
 
         ## Mix data in random order
-        mixid           = torch.randperm(len(flattened_label), generator=g).tolist()
+        # mixid           = torch.randperm(len(flattened_label), generator=g).tolist()
+        mixid           = torch.randperm(len(flattened_label)).tolist()
         mixlabel        = []
         mixmap          = []
 
